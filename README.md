@@ -2,7 +2,7 @@
 
 > A cloud-based, machine-learning-powered tool for automated detection, delineation, and spatio-temporal monitoring of glacial lakes in the Indian Himalayan Region (IHR) — deployed on Google Earth Engine.
 
-**Author:** Mitali Thapa (`22CS002602`)  
+**Author:** Mitali Thapa  
 
 ---
 
