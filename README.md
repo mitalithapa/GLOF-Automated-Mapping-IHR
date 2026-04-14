@@ -3,7 +3,7 @@
 > A cloud-based, machine-learning-powered tool for automated detection, delineation, and spatio-temporal monitoring of glacial lakes in the Indian Himalayan Region (IHR) — deployed on Google Earth Engine.
 
 **Author:** Mitali Thapa  
-
+🌐 [`GEE APP`](https://stone-history-459709-e6.projects.earthengine.app/view/automated-glof-monitor-ihr)
 ---
 
 ## 📌 Table of Contents
