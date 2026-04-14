@@ -3,8 +3,6 @@
 > A cloud-based, machine-learning-powered tool for automated detection, delineation, and spatio-temporal monitoring of glacial lakes in the Indian Himalayan Region (IHR) — deployed on Google Earth Engine.
 
 **Author:** Mitali Thapa (`22CS002602`)  
-**Supervisor:** Mr. Adnan Pipawala, Assistant Professor — Sir Padampat Singhania University  
-**Degree:** B.Tech. (Computer Science & Engineering), 2026  
 
 ---
 
@@ -13,6 +11,7 @@
 - [Overview](#-overview)
 - [Problem Statement](#-problem-statement)
 - [Key Features](#-key-features)
+- [Repository Structure](#-repository-structure)
 - [Methodology](#-methodology)
   - [Study Area](#1-study-area)
   - [Data Sources](#2-data-sources)
@@ -24,6 +23,7 @@
   - [Accuracy Assessment](#8-accuracy-assessment)
 - [Image Processing Workflow](#-image-processing-workflow)
 - [GEE Application](#-gee-application)
+- [Notebook Pipeline Guide](#-notebook-pipeline-guide)
 - [Results](#-results)
 - [Limitations](#-limitations)
 - [Future Scope](#-future-scope)
@@ -74,6 +74,46 @@ Key challenges motivating this work:
 - **Spectral signature profiling** of detected water bodies
 - **Interactive GEE web application** with real-time scan, layer toggles, and a telemetry terminal
 - **Spatio-temporal monitoring** capability for multi-date change detection
+
+---
+
+## 📁 Repository Structure
+
+```
+glof-watch/
+├── README.md                             # Project documentation and theoretical framework
+│
+├── data/
+│   └── LakeLocations.docx                # Ground truth sampling sites
+│                                         # (Samundar Tapu, Gepang, Tso Moriri, and others)
+│
+├── docs/
+│   ├── Report.pdf                        # Full research report and methodology
+│   └── images/
+│       └── workflow_architecture.png     # End-to-end pipeline flowchart
+│
+├── notebooks/
+│   ├── Raster-To-ML.ipynb                # ① Master pipeline — TIF ingestion, array
+│   │                                     #   flattening, and ML preparation
+│   ├── Rasterization.ipynb               # ② Vector-to-raster conversion for spatial
+│   │                                     #   model inputs
+│   ├── EnhancedTif.ipynb                 # ③ Multi-band TIF enhancement and spectral
+│   │                                     #   index calculation (NDWI, MNDWI, NDSI)
+│   ├── Non-LakeSamples.ipynb             # ④ Targeted generation of negative samples
+│   │                                     #   (shadow masks, snow masks)
+│   ├── UsingPolygons.ipynb               # ⑤ Spatial training and validation using
+│   │                                     #   localized polygon masks
+│   ├── Downsampling-Model.ipynb          # ⑥ Pixel downsampling to mitigate background
+│   │                                     #   class dominance
+│   └── Hybrid Sampling + SMOTE.ipynb     # ⑦ Advanced Synthetic Minority Oversampling
+│                                         #   Technique (SMOTE) implementation
+│
+└── app/
+    └── PrototypeUI.ipynb                 # Streamlit-based web app for interactive
+                                          # model inference
+```
+
+> The GEE monitoring application (`GLOF Watch v2.5`) is a separate JavaScript-based tool running on Google Earth Engine — see the [GEE Application](#-gee-application) section for setup instructions.
 
 ---
 
@@ -284,24 +324,48 @@ Map Layer
 
 ## 🌐 GEE Application
 
-The interactive GLOF Watch application is built entirely in **Google Earth Engine JavaScript API (v2.5)**.
-
-**Source file:** [`gee_app/glof_watch_v2.5.js`](./gee_app/glof_watch_v2.5.js)
+The interactive GLOF Watch monitoring tool is built entirely in the **Google Earth Engine JavaScript API (v2.5)** and runs as a standalone cloud application — separate from the Python notebooks in this repository.
 
 **How to run:**
 1. Open [code.earthengine.google.com](https://code.earthengine.google.com)
-2. Paste the contents of `glof_watch_v2.5.js` into a new script
+2. Create a new script and paste the full GEE app source code
 3. Click **Run**
 
-> ⚠️ **Note:** The app references private GEE assets (`users/mitalithapa07/...`) for training polygons and custom DEMs. To run in a new account, you will need to either share these assets or substitute your own training polygons.
+> ⚠️ **Note:** The app references private GEE assets (`users/mitalithapa07/...`) for training polygons and custom DEMs. To run in a new account, these assets must be shared or replaced with equivalent training shapefiles.
 
 **App capabilities:**
-- Select from 5 pre-defined high-risk monitoring sites or draw a custom AOI polygon
-- Set custom date ranges for seasonal analysis
-- Adjust the heuristic MNDWI threshold for fallback mode
-- Toggle map layers interactively
-- View real-time processing logs in the telemetry terminal
-- Export surface area and spectral data from the results dashboard
+- Select from 5 pre-defined high-risk monitoring sites or draw a custom AOI polygon on the map
+- Set custom date ranges for seasonal or multi-year analysis
+- Adjust the heuristic MNDWI threshold for fallback detection mode
+- Toggle Sentinel-2 base composite and lake mask layers independently
+- Monitor real-time processing stages via the telemetry terminal
+- View lake surface area (km²), spectral signature chart, model accuracy, and GLOF risk alert
+
+---
+
+## 📓 Notebook Pipeline Guide
+
+The `notebooks/` directory contains the full local ML development pipeline, intended to be run in sequence. Each notebook is a self-contained stage:
+
+| # | Notebook | Role in Pipeline |
+|---|---|---|
+| ① | `Raster-To-ML.ipynb` | **Master pipeline** — ingests GeoTIFF exports from GEE, flattens multi-band rasters into structured arrays, and prepares feature matrices for ML training |
+| ② | `Rasterization.ipynb` | Converts vector polygon shapefiles (lake / non-lake labels) into raster masks aligned to the Sentinel-2 grid |
+| ③ | `EnhancedTif.ipynb` | Computes and appends spectral indices (NDWI, MNDWI, NDSI) and topographic bands to the raw TIF stack, producing the enhanced multi-band input |
+| ④ | `Non-LakeSamples.ipynb` | Generates targeted **negative samples** — specifically mining shadow-affected and snow-covered pixels to reduce false positive rates during training |
+| ⑤ | `UsingPolygons.ipynb` | Handles spatially-aware train/validation splitting using polygon masks, ensuring no spatial leakage between training and test sets |
+| ⑥ | `Downsampling-Model.ipynb` | Applies stratified pixel downsampling to balance the heavily skewed background (non-lake) class against the minority lake class |
+| ⑦ | `Hybrid Sampling + SMOTE.ipynb` | Implements **SMOTE** (Synthetic Minority Oversampling Technique) on top of downsampling for a full hybrid class-balance strategy |
+
+**Streamlit App**
+
+`app/PrototypeUI.ipynb` builds and launches a **Streamlit web interface** for interactive model inference — upload a TIF, run the trained classifier, and visualize the detected lake mask without writing any additional code.
+
+To launch:
+```bash
+# From the app/ directory, after exporting the notebook to a .py script:
+streamlit run PrototypeUI.py
+```
 
 ---
 
@@ -354,7 +418,6 @@ The interactive GLOF Watch application is built entirely in **Google Earth Engin
 
 <div align="center">
 
-**GLOF Watch v2.5** — Built with ❤️ for the Himalayas  
-B.Tech. Final Year Project · Sir Padampat Singhania University · 2026
+**GLOF Watch v2.5** — 
 
 </div>
