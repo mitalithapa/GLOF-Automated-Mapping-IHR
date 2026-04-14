@@ -109,8 +109,10 @@ glof-watch/
 │                                         #   Technique (SMOTE) implementation
 │
 └── app/
-    └── PrototypeUI.ipynb                 # Streamlit-based web app for interactive
-                                          # model inference
+|   └── PrototypeUI.ipynb                 # Streamlit-based web app for interactive
+|                                          # model inference
+└── source/
+    └── gee_app.js
 ```
 
 > The GEE monitoring application (`GLOF Watch v2.5`) is a separate JavaScript-based tool running on Google Earth Engine — see the [GEE Application](#-gee-application) section for setup instructions.
